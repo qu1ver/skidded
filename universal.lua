@@ -1,3 +1,5 @@
+local uiColor = Color3.fromRGB(255, 0, 0)
+
 local aimbotColor = Color3.fromRGB(255, 0, 0)
 local espColor = Color3.fromRGB(255, 0, 0)
 local walkspeedNum = 16
@@ -49,7 +51,7 @@ function boxesp(v)
             if RootVis and boxEnabled then
                 BoxOutline.Size = Vector2.new(1000 / RootPosition.Z, HeadPosition.Y - LegPosition.Y)
                 BoxOutline.Position = Vector2.new(RootPosition.X - BoxOutline.Size.X / 2, RootPosition.Y - BoxOutline.Size.Y / 2)
-                BoxOutline.Visible = false
+                BoxOutline.Visible = true
 
                 Box.Size = Vector2.new(1000 / RootPosition.Z, HeadPosition.Y - LegPosition.Y)
                 Box.Position = Vector2.new(RootPosition.X - Box.Size.X / 2, RootPosition.Y - Box.Size.Y / 2)
@@ -206,27 +208,27 @@ local char = player.Character or player.CharacterAdded:Wait()
 local humanoid = char:WaitForChild("Humanoid")
 humanoid.WalkSpeed = walkspeedNum
 
-
-
 -- UI Integration
 local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/qu1ver/Roblox-UI-Libraries/main/splixx-ui.lua')))()
-local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Skidded Sigma Universal Homo Cheat V2", color = Color3.fromRGB(255, 0, 0) })
+local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Skidded Sigma Universal Homo Cheat V2", color = uiColor })
 
 local tab1 = window:page({ name = "Aimbot" })
 local tab2 = window:page({ name = "Visuals" })
 local tab3 = window:page({ name = "Misc" })
+local tab4 = window:page({ name = "Settings" })
 
 local section1 = tab1:section({ name = "Aimbot", side = "left", size = 250 })
 local section2 = tab2:section({ name = "ESP", side = "left", size = 250 })
-local section3 = tab3:section({ name = "Local Player", side = "Right", size = 250 })
-
-section3:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding = true, ticking = false, measuring = "", callback = function(value)
-    humanoid.WalkSpeed = value
-end })
+local section3 = tab3:section({ name = "Local Player", side = "left", size = 250 })
+local section4 = tab4:section({ name = "UI", side = "left", size = 75 })
 
 section1:toggle({ name = "Enabled", def = false, callback = function(boolean)
     _G.AimbotEnabled = boolean
 end })
+
+section1:dropdown({name = "Hitbox", def = "Head", options = {"Head", "HumanoidRootPart"}, callback = function(selectedOption)
+    _G.AimPart = selectedOption
+end})
 
 section1:toggle({ name = "FoV Visible", def = false, callback = function(boolean)
     _G.CircleVisible = boolean
@@ -247,6 +249,18 @@ section2:toggle({ name = "Team Check", def = false, callback = function(boolean)
 end})
 
 section2:colorpicker({name = "Box Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color) espColor = color end})
+
+section3:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding = true, ticking = false, measuring = "", callback = function(value)
+    humanoid.WalkSpeed = value
+end })
+
+section4:keybind({name = "UI Bind",def = nil,callback = function(key)
+    window.key = key
+end})
+
+section4:colorpicker({name = "UI Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color) uiColor = color end})
+
+
 
 
 
