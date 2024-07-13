@@ -135,6 +135,7 @@ local TeamCheck = false
 local AimbotEnabled = false
 local AimPart = "Head"
 local Sensitivity = 0
+_G.TeamCheck = false
 
 -- FOV CIRCLE SETTINGS
 
@@ -231,17 +232,19 @@ humanoid.WalkSpeed = walkspeedNum
 
 -- UI Integration
 local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/qu1ver/Roblox-UI-Libraries/main/splixx-ui.lua')))()
-local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Skidded Sigma Universal Homo Cheat V2", color = uiColor })
+local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "V2", color = uiColor })
 
 local tab1 = window:page({ name = "Aimbot" })
 local tab2 = window:page({ name = "Visuals" })
 local tab3 = window:page({ name = "Misc" })
-local tab4 = window:page({ name = "Settings" })
+local tab4 = window:page({ name = "Player" })
+local tab5 = window:page({ name = "Settings" })
 
 local section1 = tab1:section({ name = "Aimbot", side = "left", size = 250 })
 local section2 = tab2:section({ name = "ESP", side = "left", size = 250 })
 local section3 = tab3:section({ name = "Local Player", side = "left", size = 250 })
-local section4 = tab4:section({ name = "UI", side = "left", size = 75 })
+local section4 = tab4:section({ name = "PlayerList", side = "middle", size = 250 })
+local section5 = tab5:section({ name = "UI", side = "left", size = 75 })
 
 section1:toggle({ name = "Enabled", def = false, callback = function(boolean)
     AimbotEnabled = boolean
@@ -253,6 +256,10 @@ end })
 
 section1:toggle({ name = "FoV Visible", def = false, callback = function(boolean)
     CircleVisible = boolean
+end })
+
+section1:toggle({ name = "Team Check", def = false, callback = function(boolean)
+    _G.TeamCheck = boolean
 end })
 
 section1:slider({ name = "FoV Size", def = 80, max = 360, min = 10, rounding = true, ticking = false, measuring = "", callback = function(value)
@@ -279,8 +286,15 @@ section3:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding =
     humanoid.WalkSpeed = value
 end })
 
-section4:keybind({ name = "UI Bind", def = nil, callback = function(key)
+
+
+section5:keybind({ name = "UI Bind", def = nil, callback = function(key)
     window.key = key
 end })
+
+
+
+
+
 
 print("kaasgenieter skidded this")
