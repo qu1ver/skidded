@@ -1,8 +1,6 @@
-local uiColor = Color3.fromRGB(255, 0, 0)
-
 local lineESP = false
-local aimbotColor = Color3.fromRGB(255, 0, 0)
-local espColor = Color3.fromRGB(255, 0, 0)
+local aimbotColor = Color3.new(255, 0, 0)
+local espColor = Color3.new(255, 0, 0)
 local walkspeedNum = 16
 
 local lplr = game.Players.LocalPlayer
@@ -284,7 +282,5 @@ end })
 section4:keybind({ name = "UI Bind", def = nil, callback = function(key)
     window.key = key
 end })
-
-section4:colorpicker({ name = "UI Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color) uiColor = color end })
 
 print("kaasgenieter skidded this")
