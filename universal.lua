@@ -5,7 +5,7 @@ local walkspeedNum = 16
 
 local lplr = game.Players.LocalPlayer
 local camera = game:GetService("Workspace").CurrentCamera
-local worldToViewportPoint = camera.worldToViewportPoint
+local worldToViewportPoint = camera.WorldToViewportPoint
 
 local HeadOff = Vector3.new(0, 0.5, 0)
 local LegOff = Vector3.new(0, 1.5, 0)
@@ -82,6 +82,86 @@ game.Players.PlayerRemoving:Connect(function(v)
     end
 end)
 
+-- AIMBOT -- 
+
+local dwCamera = workspace.CurrentCamera
+local dwRunService = game:GetService("RunService")
+local dwUIS = game:GetService("UserInputService")
+local dwEntities = game:GetService("Players")
+local dwLocalPlayer = dwEntities.LocalPlayer
+local dwMouse = dwLocalPlayer:GetMouse()
+
+local settings = {
+    Aimbot = false,
+    Aiming = false,
+    Aimbot_AimPart = "Head",
+    Aimbot_TeamCheck = false,
+    Draw_Aimbot_FoV = false,
+    FoV_Radius = 80,
+    FoV_Color = Color3.fromRGB(255, 0, 0)
+}
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = settings.Draw_Aimbot_FoV
+fovCircle.Radius = settings.FoV_Radius
+fovCircle.Color = settings.FoV_Color
+fovCircle.Thickness = 1
+fovCircle.Filled = false
+fovCircle.Transparency = 1
+
+fovCircle.Position = Vector2.new(dwCamera.ViewportSize.X / 2, dwCamera.ViewportSize.Y / 2)
+
+dwUIS.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton2 then
+        settings.Aiming = true
+    end
+end)
+
+dwUIS.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton2 then
+        settings.Aiming = false
+    end
+end)
+
+dwRunService.RenderStepped:Connect(function()
+    local dist = math.huge
+    local closest_char = nil
+
+    if settings.Aiming and settings.Aimbot then
+        for _, v in pairs(dwEntities:GetPlayers()) do
+            if v ~= dwLocalPlayer and
+            v.Character and
+            v.Character:FindFirstChild("HumanoidRootPart") and
+            v.Character:FindFirstChild("Humanoid") and
+            v.Character.Humanoid.Health > 0 then
+
+                if (v.Team ~= dwLocalPlayer.Team or not settings.Aimbot_TeamCheck) then
+
+                    local char = v.Character
+                    local char_part_pos, is_onscreen = dwCamera:worldToViewportPoint(char[settings.Aimbot_AimPart].Position)
+
+                    if is_onscreen then
+                        local mag = (Vector2.new(dwMouse.X, dwMouse.Y) - Vector2.new(char_part_pos.X, char_part_pos.Y)).Magnitude
+
+                        if mag < dist and mag < settings.FoV_Radius then
+                            dist = mag
+                            closest_char = char
+                        end
+                    end
+                end
+            end
+        end
+
+        if closest_char and
+        closest_char:FindFirstChild("HumanoidRootPart") and
+        closest_char:FindFirstChild("Humanoid") and
+        closest_char.Humanoid.Health > 0 then
+
+            dwCamera.CFrame = CFrame.new(dwCamera.CFrame.Position, closest_char[settings.Aimbot_AimPart].Position)
+        end
+    end
+end)
+
 -- LINE ESP --
 
 local function lineesp(v)
@@ -121,108 +201,6 @@ game.Players.PlayerAdded:Connect(function(v)
     lineesp(v)
 end)
 
--- AIMBOT --
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Camera = game:GetService("Workspace").CurrentCamera
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-
--- AIMBOT SETTINGS
-local TeamCheck = false
-local AimbotEnabled = false
-local AimPart = "Head"
-local Sensitivity = 0
-_G.TeamCheck = false
-
--- FOV CIRCLE SETTINGS
-
-local CircleSides = 64
-local CircleColor = aimbotColor
-local CircleTransparency = 1
-local CircleRadius = 80
-local CircleFilled = false
-local CircleVisible = false
-local CircleThickness = 0
-
-local FOVCIRCLE = Drawing.new("Circle")
-FOVCIRCLE.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-FOVCIRCLE.Radius = CircleRadius
-FOVCIRCLE.Filled = CircleFilled
-FOVCIRCLE.Color = CircleColor
-FOVCIRCLE.Visible = CircleVisible
-FOVCIRCLE.Transparency = CircleTransparency
-FOVCIRCLE.NumSides = CircleSides
-FOVCIRCLE.Thickness = CircleThickness
-
-local function GetClosestPlayer()
-    local MaximumDistance = CircleRadius
-    local Target = nil
-
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer then
-            if TeamCheck then
-                if v.Team ~= LocalPlayer.Team then
-                    if v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character.Humanoid.Health > 0 then
-                        local ScreenPoint = Camera:WorldToScreenPoint(v.Character:FindFirstChild("HumanoidRootPart").Position)
-                        local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-
-                        if VectorDistance < MaximumDistance then
-                            MaximumDistance = VectorDistance
-                            Target = v
-                        end
-                    end
-                end
-            else
-                if v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character.Humanoid.Health > 0 then
-                    local ScreenPoint = Camera:WorldToScreenPoint(v.Character:FindFirstChild("HumanoidRootPart").Position)
-                    local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-
-                    if VectorDistance < MaximumDistance then
-                        MaximumDistance = VectorDistance
-                        Target = v
-                    end
-                end
-            end
-        end
-    end
-
-    return Target
-end
-
-UserInputService.InputBegan:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = true
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = false
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    FOVCIRCLE.Position = UserInputService:GetMouseLocation()
-    FOVCIRCLE.Radius = CircleRadius
-    FOVCIRCLE.Filled = CircleFilled
-    FOVCIRCLE.Color = CircleColor
-    FOVCIRCLE.Visible = CircleVisible
-    FOVCIRCLE.Transparency = CircleTransparency
-    FOVCIRCLE.NumSides = CircleSides
-    FOVCIRCLE.Thickness = CircleThickness
-
-    if Holding and AimbotEnabled then
-        local Target = GetClosestPlayer()
-        if Target and Target.Character and Target.Character:FindFirstChild(AimPart) then
-            local Tween = TweenService:Create(Camera, TweenInfo.new(Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(Camera.CFrame.Position, Target.Character[AimPart].Position) })
-            Tween:Play()
-        end
-    end
-end)
-
 -- Local Player Walkspeed
 
 local player = game.Players.LocalPlayer
@@ -232,7 +210,7 @@ humanoid.WalkSpeed = walkspeedNum
 
 -- UI Integration
 local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/qu1ver/Roblox-UI-Libraries/main/splixx-ui.lua')))()
-local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "V2", color = uiColor })
+local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Selene universal", color = espColor })
 
 local tab1 = window:page({ name = "Aimbot" })
 local tab2 = window:page({ name = "Visuals" })
@@ -247,26 +225,30 @@ local section4 = tab4:section({ name = "PlayerList", side = "middle", size = 250
 local section5 = tab5:section({ name = "UI", side = "left", size = 75 })
 
 section1:toggle({ name = "Enabled", def = false, callback = function(boolean)
-    AimbotEnabled = boolean
+    settings.Aimbot = boolean
 end })
 
 section1:dropdown({ name = "Hitbox", def = "Head", options = { "Head", "HumanoidRootPart" }, callback = function(selectedOption)
-    AimPart = selectedOption
+    settings.Aimbot_AimPart = selectedOption
 end })
 
 section1:toggle({ name = "FoV Visible", def = false, callback = function(boolean)
-    CircleVisible = boolean
+    settings.Draw_Aimbot_FoV = boolean
+    fovCircle.Visible = boolean
 end })
 
 section1:toggle({ name = "Team Check", def = false, callback = function(boolean)
-    _G.TeamCheck = boolean
+    settings.Aimbot_TeamCheck = boolean
 end })
+
 
 section1:slider({ name = "FoV Size", def = 80, max = 360, min = 10, rounding = true, ticking = false, measuring = "", callback = function(value)
-    CircleRadius = value
+    fovCircle.Radius = value
 end })
 
-section1:colorpicker({ name = "FoV Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color) CircleColor = color end })
+section1:colorpicker({ name = "FoV Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color)
+    fovCircle.Color = color
+end })
 
 section2:toggle({ name = "Enabled", def = false, callback = function(boolean)
     boxEnabled = boolean
@@ -280,21 +262,14 @@ section2:toggle({ name = "Team Check", def = false, callback = function(boolean)
     teamCheck = boolean
 end })
 
-section2:colorpicker({ name = "Box Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color) espColor = color end })
+section2:colorpicker({ name = "Box Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color)
+    espColor = color
+end })
 
 section3:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding = true, ticking = false, measuring = "", callback = function(value)
     humanoid.WalkSpeed = value
 end })
 
-
-
 section5:keybind({ name = "UI Bind", def = nil, callback = function(key)
     window.key = key
 end })
-
-
-
-
-
-
-print("kaasgenieter skidded this")
