@@ -1,6 +1,5 @@
 local lineESP = false
-local aimbotColor = Color3.new(255, 0, 0)
-local espColor = Color3.new(255, 0, 0)
+local espColor = Color3.new(1, 0, 0)
 local walkspeedNum = 16
 
 local lplr = game.Players.LocalPlayer
@@ -48,7 +47,7 @@ local function boxesp(v)
                 if teamCheck and v.TeamColor == lplr.TeamColor then
                     Box.Visible = false
                 else
-                    Box.Color = Color3.new(1, 0, 0)
+                    Box.Color = espColor
                 end
             else
                 Box.Visible = false
@@ -82,7 +81,7 @@ game.Players.PlayerRemoving:Connect(function(v)
     end
 end)
 
--- AIMBOT -- 
+-- AIMBOT --
 
 local dwCamera = workspace.CurrentCamera
 local dwRunService = game:GetService("RunService")
@@ -167,7 +166,7 @@ end)
 local function lineesp(v)
     local Tracer = Drawing.new("Line")
     Tracer.Visible = false
-    Tracer.Color = Color3.new(1, 0, 0)
+    Tracer.Color = espColor
     Tracer.Thickness = 2
     Tracer.Transparency = 1
 
@@ -176,7 +175,7 @@ local function lineesp(v)
             local Vector, OnScreen = camera:worldToViewportPoint(v.Character.HumanoidRootPart.Position)
 
             if OnScreen then
-                Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 1)
+                Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
                 Tracer.To = Vector2.new(Vector.X, Vector.Y)
 
                 if teamCheck and v.TeamColor == lplr.TeamColor then
@@ -199,6 +198,13 @@ end
 
 game.Players.PlayerAdded:Connect(function(v)
     lineesp(v)
+end)
+
+game.Players.PlayerRemoving:Connect(function(v)
+    if Tracer then
+        Tracer.Visible = false
+        Tracer = nil
+    end
 end)
 
 -- Local Player Walkspeed
