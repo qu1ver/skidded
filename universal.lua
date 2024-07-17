@@ -216,7 +216,7 @@ humanoid.WalkSpeed = walkspeedNum
 
 -- UI Integration
 local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/qu1ver/Roblox-UI-Libraries/main/splixx-ui.lua')))()
-local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Selene universal", color = espColor })
+local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Shit Cheat.cc", color = espColor })
 
 local tab1 = window:page({ name = "Aimbot" })
 local tab2 = window:page({ name = "Visuals" })
