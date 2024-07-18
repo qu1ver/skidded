@@ -11,6 +11,7 @@ local LegOff = Vector3.new(0, 1.5, 0)
 
 local boxes = {}
 local boxEnabled = false
+local boxFill = false
 local teamCheck = false
 
 function createBox()
@@ -21,7 +22,14 @@ function createBox()
     Box.Transparency = 1
     Box.Filled = false
 
-    return Box
+    local boxFilled = Drawing.new("Square")
+    boxFilled.Visible = false
+    boxFilled.Color = espColor
+    boxFilled.Thickness = 1
+    boxFilled.Transparency = 0.35
+    boxFilled.Filled = true
+
+    return Box, boxFilled
 end
 
 local function boxesp(v)
@@ -29,6 +37,7 @@ local function boxesp(v)
         boxes[v] = { createBox() }
     end
     local Box = boxes[v][1]
+    local boxFilled = boxes[v][2]
 
     local connection
     connection = game:GetService("RunService").RenderStepped:Connect(function()
@@ -43,17 +52,24 @@ local function boxesp(v)
                 Box.Size = Vector2.new(1000 / RootPosition.Z, HeadPosition.Y - LegPosition.Y)
                 Box.Position = Vector2.new(RootPosition.X - Box.Size.X / 2, RootPosition.Y - Box.Size.Y / 2)
                 Box.Visible = true
+                boxFilled.Size = Box.Size
+                boxFilled.Position = Box.Position
+                boxFilled.Visible = boxFill
 
                 if teamCheck and v.TeamColor == lplr.TeamColor then
                     Box.Visible = false
+                    boxFilled.Visible = false
                 else
                     Box.Color = espColor
+                    boxFilled.Color = espColor
                 end
             else
                 Box.Visible = false
+                boxFilled.Visible = false
             end
         else
             Box.Visible = false
+            boxFilled.Visible = false
         end
     end)
 
@@ -61,6 +77,7 @@ local function boxesp(v)
         if not parent then
             connection:Disconnect()
             Box:Remove()
+            boxFilled:Remove()
             boxes[v] = nil
         end
     end)
@@ -77,6 +94,7 @@ end)
 game.Players.PlayerRemoving:Connect(function(v)
     if boxes[v] then
         boxes[v][1]:Remove()
+        boxes[v][2]:Remove()
         boxes[v] = nil
     end
 end)
@@ -207,7 +225,7 @@ game.Players.PlayerRemoving:Connect(function(v)
     end
 end)
 
--- Local Player Walkspeed
+-- Local Player Walkspeed with CFrame
 
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
@@ -226,8 +244,8 @@ local tab5 = window:page({ name = "Settings" })
 
 local section1 = tab1:section({ name = "Aimbot", side = "left", size = 250 })
 local section2 = tab2:section({ name = "ESP", side = "left", size = 250 })
-local section3 = tab3:section({ name = "Local Player", side = "left", size = 250 })
-local section4 = tab4:section({ name = "PlayerList", side = "middle", size = 250 })
+local section3 = tab3:section({ name = "misc", side = "left", size = 250 })
+local section4 = tab4:section({ name = "Local Player", side = "left", size = 250 })
 local section5 = tab5:section({ name = "UI", side = "left", size = 75 })
 
 section1:toggle({ name = "Enabled", def = false, callback = function(boolean)
@@ -260,6 +278,10 @@ section2:toggle({ name = "Enabled", def = false, callback = function(boolean)
     boxEnabled = boolean
 end })
 
+section2:toggle({ name = "Filled", def = false, callback = function(boolean)
+    boxFill = boolean
+end })
+
 section2:toggle({ name = "Tracer", def = false, callback = function(boolean)
     lineESP = boolean
 end })
@@ -272,8 +294,8 @@ section2:colorpicker({ name = "Box Color", cpname = "Color Picker", def = Color3
     espColor = color
 end })
 
-section3:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding = true, ticking = false, measuring = "", callback = function(value)
-    humanoid.WalkSpeed = value
+section4:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding = true, ticking = false, measuring = "", callback = function(value)
+    walkspeedNum = value
 end })
 
 section5:keybind({ name = "UI Bind", def = nil, callback = function(key)
