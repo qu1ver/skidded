@@ -2,9 +2,9 @@ local lineESP = false
 local lineColor = Color3.new(1, 0, 0)
 local espColor = Color3.new(1, 0, 0)
 local walkspeedNum = 16
+local infJumpEnabled = false
 
 -- Spinbot
-
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -21,7 +21,6 @@ local function spin()
 end
 
 spin()
-
 
 local lplr = game.Players.LocalPlayer
 local camera = game:GetService("Workspace").CurrentCamera
@@ -77,7 +76,7 @@ local function boxesp(v)
                 boxFilled.Position = Box.Position
                 boxFilled.Visible = boxFill
 
-                if teamCheck and v.TeamColor == lplr.TeamColor then
+                if teamCheck and v.Team == lplr.Team then
                     Box.Visible = false
                     boxFilled.Visible = false
                 else
@@ -121,7 +120,6 @@ game.Players.PlayerRemoving:Connect(function(v)
 end)
 
 -- AIMBOT --
-
 local dwCamera = workspace.CurrentCamera
 local dwRunService = game:GetService("RunService")
 local dwUIS = game:GetService("UserInputService")
@@ -176,7 +174,7 @@ dwRunService.RenderStepped:Connect(function()
                 if (v.Team ~= dwLocalPlayer.Team or not settings.Aimbot_TeamCheck) then
 
                     local char = v.Character
-                    local char_part_pos, is_onscreen = dwCamera:worldToViewportPoint(char[settings.Aimbot_AimPart].Position)
+                    local char_part_pos, is_onscreen = dwCamera:WorldToViewportPoint(char[settings.Aimbot_AimPart].Position)
 
                     if is_onscreen then
                         local mag = (Vector2.new(dwMouse.X, dwMouse.Y) - Vector2.new(char_part_pos.X, char_part_pos.Y)).Magnitude
@@ -201,7 +199,6 @@ dwRunService.RenderStepped:Connect(function()
 end)
 
 -- LINE ESP --
-
 local tracers = {}
 
 local function lineesp(v)
@@ -222,7 +219,7 @@ local function lineesp(v)
                 Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
                 Tracer.To = Vector2.new(Vector.X, Vector.Y)
 
-                if teamCheck and v.TeamColor == lplr.TeamColor then
+                if teamCheck and v.Team == lplr.Team then
                     Tracer.Visible = false
                 else
                     Tracer.Visible = lineESP
@@ -260,12 +257,19 @@ game.Players.PlayerRemoving:Connect(function(v)
     end
 end)
 
-local player = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local humanoid = char:WaitForChild("Humanoid")
+-- Walkspeed and Infinite Jump
+local humanoid = character:WaitForChild("Humanoid")
 humanoid.WalkSpeed = walkspeedNum
 
--- UI Integration
+local userInputService = game:GetService("UserInputService")
+
+userInputService.JumpRequest:Connect(function()
+    if infJumpEnabled then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- UI Library
 local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/qu1ver/Roblox-UI-Libraries/main/splixx-ui.lua')))()
 local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Shit Cheat.cc", color = espColor })
 
@@ -279,7 +283,7 @@ local tab5 = window:page({ name = "Settings" })
 local section1 = tab1:section({ name = "Aimbot", side = "left", size = 250 })
 local section6 = tab6:section({ name = "Anti-Aim", side = "left", size = 250 })
 local section2 = tab2:section({ name = "ESP", side = "left", size = 250 })
-local section3 = tab3:section({ name = "misc", side = "left", size = 250 })
+local section3 = tab3:section({ name = "Misc", side = "left", size = 250 })
 local section4 = tab4:section({ name = "Local Player", side = "left", size = 250 })
 local section5 = tab5:section({ name = "UI", side = "left", size = 75 })
 
@@ -292,7 +296,6 @@ section1:dropdown({ name = "Hitbox", def = "Head", options = { "Head", "Humanoid
 end })
 
 section1:toggle({ name = "FoV Visible", def = false, callback = function(boolean)
-    settings.Draw_Aimbot_FoV = boolean
     fovCircle.Visible = boolean
 end })
 
@@ -350,6 +353,10 @@ end })
 section4:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding = true, ticking = false, measuring = "", callback = function(value)
     walkspeedNum = value
     humanoid.WalkSpeed = value
+end })
+
+section4:toggle({ name = "+Inf jump", def = false, callback = function(boolean) -- New toggle for infinite jump
+    infJumpEnabled = boolean
 end })
 
 section5:keybind({ name = "UI Bind", def = nil, callback = function(key)
