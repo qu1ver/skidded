@@ -1,6 +1,27 @@
 local lineESP = false
+local lineColor = Color3.new(1, 0, 0)
 local espColor = Color3.new(1, 0, 0)
 local walkspeedNum = 16
+
+-- Spinbot
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local spinSpeed = 10
+local spinEnabled = false
+
+local function spin()
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if spinEnabled then
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+        end
+    end)
+end
+
+spin()
+
 
 local lplr = game.Players.LocalPlayer
 local camera = game:GetService("Workspace").CurrentCamera
@@ -181,16 +202,21 @@ end)
 
 -- LINE ESP --
 
+local tracers = {}
+
 local function lineesp(v)
     local Tracer = Drawing.new("Line")
     Tracer.Visible = false
-    Tracer.Color = espColor
+    Tracer.Color = lineColor
     Tracer.Thickness = 2
     Tracer.Transparency = 1
 
-    game:GetService("RunService").RenderStepped:Connect(function()
+    tracers[v] = Tracer
+
+    local connection
+    connection = game:GetService("RunService").RenderStepped:Connect(function()
         if v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v ~= lplr and v.Character.Humanoid.Health > 0 then
-            local Vector, OnScreen = camera:worldToViewportPoint(v.Character.HumanoidRootPart.Position)
+            local Vector, OnScreen = camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
 
             if OnScreen then
                 Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
@@ -200,12 +226,21 @@ local function lineesp(v)
                     Tracer.Visible = false
                 else
                     Tracer.Visible = lineESP
+                    Tracer.Color = lineColor
                 end
             else
                 Tracer.Visible = false
             end
         else
             Tracer.Visible = false
+        end
+    end)
+
+    v.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            connection:Disconnect()
+            Tracer:Remove()
+            tracers[v] = nil
         end
     end)
 end
@@ -219,13 +254,11 @@ game.Players.PlayerAdded:Connect(function(v)
 end)
 
 game.Players.PlayerRemoving:Connect(function(v)
-    if Tracer then
-        Tracer.Visible = false
-        Tracer = nil
+    if tracers[v] then
+        tracers[v]:Remove()
+        tracers[v] = nil
     end
 end)
-
--- Local Player Walkspeed with CFrame
 
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
@@ -237,12 +270,14 @@ local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/qu1v
 local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Shit Cheat.cc", color = espColor })
 
 local tab1 = window:page({ name = "Aimbot" })
+local tab6 = window:page({ name = "Anti-aim" })
 local tab2 = window:page({ name = "Visuals" })
 local tab3 = window:page({ name = "Misc" })
 local tab4 = window:page({ name = "Player" })
 local tab5 = window:page({ name = "Settings" })
 
 local section1 = tab1:section({ name = "Aimbot", side = "left", size = 250 })
+local section6 = tab6:section({ name = "Anti-Aim", side = "left", size = 250 })
 local section2 = tab2:section({ name = "ESP", side = "left", size = 250 })
 local section3 = tab3:section({ name = "misc", side = "left", size = 250 })
 local section4 = tab4:section({ name = "Local Player", side = "left", size = 250 })
@@ -265,13 +300,20 @@ section1:toggle({ name = "Team Check", def = false, callback = function(boolean)
     settings.Aimbot_TeamCheck = boolean
 end })
 
-
 section1:slider({ name = "FoV Size", def = 80, max = 360, min = 10, rounding = true, ticking = false, measuring = "", callback = function(value)
     fovCircle.Radius = value
 end })
 
 section1:colorpicker({ name = "FoV Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color)
     fovCircle.Color = color
+end })
+
+section6:toggle({ name = "Spinbot", def = false, callback = function(boolean)
+    spinEnabled = boolean
+end })
+
+section6:slider({ name = "Spinbot Speed", def = 10, max = 500, min = 10, rounding = true, ticking = false, measuring = "", callback = function(value)
+    spinSpeed = value
 end })
 
 section2:toggle({ name = "Enabled", def = false, callback = function(boolean)
@@ -292,10 +334,22 @@ end })
 
 section2:colorpicker({ name = "Box Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color)
     espColor = color
+    for _, box in pairs(boxes) do
+        box[1].Color = color
+        box[2].Color = color
+    end
+end })
+
+section2:colorpicker({ name = "Line Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color)
+    lineColor = color
+    for _, tracer in pairs(tracers) do
+        tracer.Color = color
+    end
 end })
 
 section4:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding = true, ticking = false, measuring = "", callback = function(value)
     walkspeedNum = value
+    humanoid.WalkSpeed = value
 end })
 
 section5:keybind({ name = "UI Bind", def = nil, callback = function(key)
