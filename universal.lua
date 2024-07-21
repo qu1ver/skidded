@@ -147,15 +147,11 @@ fovCircle.Transparency = 1
 
 fovCircle.Position = Vector2.new(dwCamera.ViewportSize.X / 2, dwCamera.ViewportSize.Y / 2)
 
-dwUIS.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton2 then
-        settings.Aiming = true
-    end
-end)
+local aimKey = nil  -- Variable to store the aim key
 
-dwUIS.InputEnded:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton2 then
-        settings.Aiming = false
+dwUIS.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.Keyboard and i.KeyCode == aimKey then
+        settings.Aiming = not settings.Aiming  -- Toggle the aiming state
     end
 end)
 
@@ -289,6 +285,10 @@ local section5 = tab5:section({ name = "UI", side = "left", size = 75 })
 
 section1:toggle({ name = "Enabled", def = false, callback = function(boolean)
     settings.Aimbot = boolean
+end })
+
+section1:keybind({ name = "Aim key", def = nil, callback = function(key)
+    aimKey = key
 end })
 
 section1:dropdown({ name = "Hitbox", def = "Head", options = { "Head", "HumanoidRootPart" }, callback = function(selectedOption)
