@@ -1,26 +1,4 @@
-local lineESP = false
-local lineColor = Color3.new(1, 0, 0)
-local espColor = Color3.new(1, 0, 0)
-local walkspeedNum = 16
-local infJumpEnabled = false
-
--- Spinbot
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-local spinSpeed = 10
-local spinEnabled = false
-
-local function spin()
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if spinEnabled then
-            humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
-        end
-    end)
-end
-
-spin()
+local espColor = Color3.fromRGB(255, 0, 0) -- Define the default ESP color
 
 local lplr = game.Players.LocalPlayer
 local camera = game:GetService("Workspace").CurrentCamera
@@ -119,7 +97,7 @@ game.Players.PlayerRemoving:Connect(function(v)
     end
 end)
 
--- AIMBOT --
+-- Aimbot logic
 local dwCamera = workspace.CurrentCamera
 local dwRunService = game:GetService("RunService")
 local dwUIS = game:GetService("UserInputService")
@@ -147,11 +125,11 @@ fovCircle.Transparency = 1
 
 fovCircle.Position = Vector2.new(dwCamera.ViewportSize.X / 2, dwCamera.ViewportSize.Y / 2)
 
-local aimKey = nil  -- Variable to store the aim key
+local aimKey = Enum.KeyCode.E -- Example aim key, change as needed
 
 dwUIS.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.Keyboard and i.KeyCode == aimKey then
-        settings.Aiming = not settings.Aiming  -- Toggle the aiming state
+        settings.Aiming = not settings.Aiming -- Toggle the aiming state
     end
 end)
 
@@ -194,171 +172,150 @@ dwRunService.RenderStepped:Connect(function()
     end
 end)
 
--- LINE ESP --
-local tracers = {}
+local uis = game:GetService("UserInputService")
 
-local function lineesp(v)
-    local Tracer = Drawing.new("Line")
-    Tracer.Visible = false
-    Tracer.Color = lineColor
-    Tracer.Thickness = 2
-    Tracer.Transparency = 1
+local infJump = false
 
-    tracers[v] = Tracer
-
-    local connection
-    connection = game:GetService("RunService").RenderStepped:Connect(function()
-        if v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v ~= lplr and v.Character.Humanoid.Health > 0 then
-            local Vector, OnScreen = camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-
-            if OnScreen then
-                Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
-                Tracer.To = Vector2.new(Vector.X, Vector.Y)
-
-                if teamCheck and v.Team == lplr.Team then
-                    Tracer.Visible = false
-                else
-                    Tracer.Visible = lineESP
-                    Tracer.Color = lineColor
-                end
-            else
-                Tracer.Visible = false
-            end
-        else
-            Tracer.Visible = false
-        end
-    end)
-
-    v.AncestryChanged:Connect(function(_, parent)
-        if not parent then
-            connection:Disconnect()
-            Tracer:Remove()
-            tracers[v] = nil
-        end
-    end)
-end
-
-for _, v in pairs(game.Players:GetPlayers()) do
-    lineesp(v)
-end
-
-game.Players.PlayerAdded:Connect(function(v)
-    lineesp(v)
-end)
-
-game.Players.PlayerRemoving:Connect(function(v)
-    if tracers[v] then
-        tracers[v]:Remove()
-        tracers[v] = nil
-    end
-end)
-
--- Walkspeed and Infinite Jump
-local humanoid = character:WaitForChild("Humanoid")
-humanoid.WalkSpeed = walkspeedNum
-
-local userInputService = game:GetService("UserInputService")
-
-userInputService.JumpRequest:Connect(function()
-    if infJumpEnabled then
+uis.JumpRequest:Connect(function()
+    if infJump then
         humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end)
 
--- UI Library
-local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/qu1ver/Roblox-UI-Libraries/main/splixx-ui.lua')))()
-local window = library:new({ textsize = 13.5, font = Enum.Font.RobotoMono, name = "Shit Cheat.cc", color = espColor })
+-- UI Integration
+local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
 
-local tab1 = window:page({ name = "Aimbot" })
-local tab6 = window:page({ name = "Anti-aim" })
-local tab2 = window:page({ name = "Visuals" })
-local tab3 = window:page({ name = "Misc" })
-local tab4 = window:page({ name = "Player" })
-local tab5 = window:page({ name = "Settings" })
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
 
-local section1 = tab1:section({ name = "Aimbot", side = "left", size = 250 })
-local section6 = tab6:section({ name = "Anti-Aim", side = "left", size = 250 })
-local section2 = tab2:section({ name = "ESP", side = "left", size = 250 })
-local section3 = tab3:section({ name = "Misc", side = "left", size = 250 })
-local section4 = tab4:section({ name = "Local Player", side = "left", size = 250 })
-local section5 = tab5:section({ name = "UI", side = "left", size = 75 })
+local Window = Library:CreateWindow({
+    Title = 'ShitSense.gay',
+    Center = true,
+    AutoShow = true,
+    TabPadding = 8,
+    MenuFadeTime = 0.2
+})
 
-section1:toggle({ name = "Enabled", def = false, callback = function(boolean)
-    settings.Aimbot = boolean
-end })
+local Tabs = {
+    Main = Window:AddTab('Main'),
+    Visuals = Window:AddTab('Visuals'),
+    Misc = Window:AddTab('Misc'),
+    ['UI Settings'] = Window:AddTab('UI Settings')
+}
 
-section1:keybind({ name = "Aim key", def = nil, callback = function(key)
-    aimKey = key
-end })
+local leftAimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
+local leftOtherMisc = Tabs.Misc:AddLeftGroupbox('Other')
+local leftLocalPlrMisc = Tabs.Misc:AddRightGroupbox('Local Player')
+local leftVisuals = Tabs.Visuals:AddLeftGroupbox('ESP')
 
-section1:dropdown({ name = "Hitbox", def = "Head", options = { "Head", "HumanoidRootPart" }, callback = function(selectedOption)
-    settings.Aimbot_AimPart = selectedOption
-end })
-
-section1:toggle({ name = "FoV Visible", def = false, callback = function(boolean)
-    fovCircle.Visible = boolean
-end })
-
-section1:toggle({ name = "Team Check", def = false, callback = function(boolean)
-    settings.Aimbot_TeamCheck = boolean
-end })
-
-section1:slider({ name = "FoV Size", def = 80, max = 360, min = 10, rounding = true, ticking = false, measuring = "", callback = function(value)
-    fovCircle.Radius = value
-end })
-
-section1:colorpicker({ name = "FoV Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color)
-    fovCircle.Color = color
-end })
-
-section6:toggle({ name = "Spinbot", def = false, callback = function(boolean)
-    spinEnabled = boolean
-end })
-
-section6:slider({ name = "Spinbot Speed", def = 10, max = 500, min = 10, rounding = true, ticking = false, measuring = "", callback = function(value)
-    spinSpeed = value
-end })
-
-section2:toggle({ name = "Enabled", def = false, callback = function(boolean)
-    boxEnabled = boolean
-end })
-
-section2:toggle({ name = "Filled", def = false, callback = function(boolean)
-    boxFill = boolean
-end })
-
-section2:toggle({ name = "Tracer", def = false, callback = function(boolean)
-    lineESP = boolean
-end })
-
-section2:toggle({ name = "Team Check", def = false, callback = function(boolean)
-    teamCheck = boolean
-end })
-
-section2:colorpicker({ name = "Box Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color)
-    espColor = color
-    for _, box in pairs(boxes) do
-        box[1].Color = color
-        box[2].Color = color
+leftAimbotGroup:AddToggle('aimbotToggle', {
+    Text = 'Enable',
+    Default = false,
+    Tooltip = 'Enables Aimbot',
+    Callback = function(Value)
+        settings.Aimbot = Value
     end
-end })
+})
 
-section2:colorpicker({ name = "Line Color", cpname = "Color Picker", def = Color3.fromRGB(255, 0, 0), callback = function(color)
-    lineColor = color
-    for _, tracer in pairs(tracers) do
-        tracer.Color = color
+leftAimbotGroup:AddToggle('fovVisToggle', {
+    Text = 'Show FoV',
+    Default = false,
+    Tooltip = 'Shows FoV',
+    Callback = function(Value)
+        settings.Draw_Aimbot_FoV = Value
+        fovCircle.Visible = Value
     end
-end })
+})
 
-section4:slider({ name = "Walkspeed", def = 16, max = 2450, min = 16, rounding = true, ticking = false, measuring = "", callback = function(value)
-    walkspeedNum = value
-    humanoid.WalkSpeed = value
-end })
+leftAimbotGroup:AddSlider('aimbotFov_Size', {
+    Text = 'FoV Size',
+    Default = 80,
+    Min = 10,
+    Max = 680,
+    Rounding = 1,
+    Callback = function(Value)
+        settings.FoV_Radius = Value
+        fovCircle.Radius = Value
+    end
+})
 
-section4:toggle({ name = "+Inf jump", def = false, callback = function(boolean) -- New toggle for infinite jump
-    infJumpEnabled = boolean
-end })
+leftAimbotGroup:AddDropdown('aimPartDropdown', {
+    Values = { 'Head', 'HumanoidRootPart' },
+    Default = 1,
+    Multi = false,
+    Text = 'Aim part',
+    Callback = function(Value)
+        settings.Aimbot_AimPart = Value
+    end
+})
 
-section5:keybind({ name = "UI Bind", def = nil, callback = function(key)
-    window.key = key
-end })
+leftVisuals:AddToggle('boxToggle', {
+    Text = 'Enable Box ESP',
+    Default = false,
+    Tooltip = 'Enables Box ESP',
+    Callback = function(Value)
+        boxEnabled = Value
+    end
+})
+
+leftVisuals:AddToggle('boxFillToggle', {
+    Text = 'Box Fill',
+    Default = false,
+    Tooltip = 'Enables Box Fill',
+    Callback = function(Value)
+        boxFill = Value
+    end
+})
+
+leftVisuals:AddToggle('teamCheckToggle', {
+    Text = 'Team Check',
+    Default = false,
+    Tooltip = 'Enables Team Check for ESP',
+    Callback = function(Value)
+        teamCheck = Value
+    end
+})
+
+leftOtherMisc:AddToggle('hitsoundToggle', {
+    Text = 'Hit sound',
+    Default = false,
+    Tooltip = 'Enables hitsound',
+})
+
+leftOtherMisc:AddDropdown('hitSound', {
+    Values = { 'Rust', 'Mario' },
+    Default = 1,
+    Multi = false,
+    Text = 'Hit sound'
+})
+
+local infJumpToggle = leftLocalPlrMisc:AddToggle('infJumpToggle', {
+    Text = 'Infinite jump',
+    Default = false,
+    Tooltip = 'Enables infinite jump'
+})
+
+infJumpToggle:OnChanged(function(Value)
+    infJump = Value
+end)
+
+Library.KeybindFrame.Visible = false
+
+Library:OnUnload(function()
+    WatermarkConnection:Disconnect()
+    Library.Unloaded = true
+end)
+
+local MenuGroup = Tabs['UI Settings']:AddLeftGroupbox('Menu')
+MenuGroup:AddButton('Unload', function() Library:Unload() end)
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'Insert', NoUI = true, Text = 'Menu keybind' })
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+SaveManager:SetFolder('ShitSense.gay/Arsenal')
+SaveManager:BuildConfigSection(Tabs['UI Settings'])
+SaveManager:LoadAutoloadConfig()
